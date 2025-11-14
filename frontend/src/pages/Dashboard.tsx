@@ -1,7 +1,7 @@
 import { Container, Grid, Card, Text, Table, Button, Badge, Group, Title } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { listTests, type HearingTest } from '../lib/api'
+import { listTests } from '../lib/api'
 
 export function Dashboard() {
   const navigate = useNavigate()

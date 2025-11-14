@@ -72,6 +72,8 @@ export interface TestDetail {
     device: string
     technician: string
     notes: string
+    confidence?: number
+    image_path?: string
   }
 }
 
