@@ -243,6 +243,43 @@ def update_test(test_id):
     return get_test(test_id)
 
 
+@api_bp.route('/tests/<test_id>', methods=['DELETE'])
+def delete_test(test_id):
+    """
+    Delete a test and its measurements.
+
+    Response:
+        {'success': true}
+    """
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+
+    # Verify test exists
+    cursor.execute("SELECT id, image_path FROM hearing_test WHERE id = ?", (test_id,))
+    test = cursor.fetchone()
+
+    if not test:
+        conn.close()
+        return jsonify({'error': 'Test not found'}), 404
+
+    # Delete measurements (cascade should handle this, but explicit is clear)
+    cursor.execute("DELETE FROM audiogram_measurement WHERE id_hearing_test = ?", (test_id,))
+
+    # Delete test
+    cursor.execute("DELETE FROM hearing_test WHERE id = ?", (test_id,))
+
+    conn.commit()
+    conn.close()
+
+    # Delete image file if it exists
+    if test['image_path']:
+        image_path = Path(test['image_path'])
+        if image_path.exists():
+            image_path.unlink()
+
+    return jsonify({'success': True})
+
+
 def _deduplicate_measurements(measurements: List[Dict]) -> List[Dict]:
     """
     Deduplicate measurements by frequency, keeping median threshold value.
