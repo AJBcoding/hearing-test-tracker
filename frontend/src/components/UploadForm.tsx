@@ -1,23 +1,28 @@
 import { useState } from 'react'
-import { Button, FileInput, Stack, Alert, Table, NumberInput, Group } from '@mantine/core'
+import { Button, FileInput, Stack, Alert } from '@mantine/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { uploadAudiogram, type UploadResponse, type AudiogramMeasurement } from '../lib/api'
+import { useNavigate } from 'react-router-dom'
+import { notifications } from '@mantine/notifications'
+import { uploadAudiogram } from '../lib/api'
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<UploadResponse | null>(null)
-  const [editedLeftEar, setEditedLeftEar] = useState<AudiogramMeasurement[]>([])
-  const [editedRightEar, setEditedRightEar] = useState<AudiogramMeasurement[]>([])
-  const [isEditing, setIsEditing] = useState(false)
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const uploadMutation = useMutation({
     mutationFn: uploadAudiogram,
     onSuccess: (data) => {
-      setResult(data)
-      setEditedLeftEar(data.left_ear)
-      setEditedRightEar(data.right_ear)
-      setIsEditing(data.needs_review)
+      if (data.confidence >= 0.8) {
+        notifications.show({
+          title: 'Upload Successful',
+          message: `Test uploaded with ${(data.confidence * 100).toFixed(0)}% confidence`,
+          color: 'green'
+        })
+        navigate(`/tests/${data.test_id}`)
+      } else {
+        navigate(`/tests/${data.test_id}/review`)
+      }
       queryClient.invalidateQueries({ queryKey: ['tests'] })
     }
   })
@@ -26,23 +31,6 @@ export function UploadForm() {
     if (file) {
       uploadMutation.mutate(file)
     }
-  }
-
-  const handleConfirm = () => {
-    setIsEditing(false)
-    // TODO: Send updated values to backend if they were edited
-  }
-
-  const updateLeftEar = (index: number, value: number) => {
-    const updated = [...editedLeftEar]
-    updated[index] = { ...updated[index], threshold_db: value }
-    setEditedLeftEar(updated)
-  }
-
-  const updateRightEar = (index: number, value: number) => {
-    const updated = [...editedRightEar]
-    updated[index] = { ...updated[index], threshold_db: value }
-    setEditedRightEar(updated)
   }
 
   return (
@@ -67,76 +55,6 @@ export function UploadForm() {
         <Alert color="red" title="Upload Failed">
           {uploadMutation.error.message}
         </Alert>
-      )}
-
-      {result && (
-        <>
-          <Alert
-            color={isEditing ? 'yellow' : 'green'}
-            title={isEditing ? 'Manual Review Required' : 'Upload Successful'}
-          >
-            Confidence: {(result.confidence * 100).toFixed(0)}%
-            {isEditing && ' - Please review and correct values below'}
-          </Alert>
-
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Frequency (Hz)</Table.Th>
-                <Table.Th>Left Ear (dB)</Table.Th>
-                <Table.Th>Right Ear (dB)</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {editedLeftEar.map((left, idx) => {
-                const right = editedRightEar[idx]
-                return (
-                  <Table.Tr key={left.frequency_hz}>
-                    <Table.Td>{left.frequency_hz}</Table.Td>
-                    <Table.Td>
-                      {isEditing ? (
-                        <NumberInput
-                          value={left.threshold_db}
-                          onChange={(val) => updateLeftEar(idx, val as number)}
-                          min={0}
-                          max={120}
-                          step={5}
-                          size="xs"
-                        />
-                      ) : (
-                        left.threshold_db.toFixed(1)
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      {right ? (
-                        isEditing ? (
-                          <NumberInput
-                            value={right.threshold_db}
-                            onChange={(val) => updateRightEar(idx, val as number)}
-                            min={0}
-                            max={120}
-                            step={5}
-                            size="xs"
-                          />
-                        ) : (
-                          right.threshold_db.toFixed(1)
-                        )
-                      ) : '-'}
-                    </Table.Td>
-                  </Table.Tr>
-                )
-              })}
-            </Table.Tbody>
-          </Table>
-
-          {isEditing && (
-            <Group justify="flex-end">
-              <Button onClick={handleConfirm} color="green">
-                Confirm & Save Results
-              </Button>
-            </Group>
-          )}
-        </>
       )}
     </Stack>
   )
