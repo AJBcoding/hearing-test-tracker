@@ -1,0 +1,16 @@
+.link {
+  text-decoration: none;
+  color: var(--mantine-color-gray-7);
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: var(--mantine-color-blue-6);
+}
+
+.linkActive {
+  text-decoration: none;
+  color: var(--mantine-color-blue-6);
+  font-weight: 600;
+}

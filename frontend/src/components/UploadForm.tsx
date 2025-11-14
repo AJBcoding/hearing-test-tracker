@@ -1,17 +1,28 @@
 import { useState } from 'react'
-import { Button, FileInput, Stack, Alert, Table } from '@mantine/core'
+import { Button, FileInput, Stack, Alert } from '@mantine/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { uploadAudiogram, type UploadResponse } from '../lib/api'
+import { useNavigate } from 'react-router-dom'
+import { notifications } from '@mantine/notifications'
+import { uploadAudiogram } from '../lib/api'
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<UploadResponse | null>(null)
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const uploadMutation = useMutation({
     mutationFn: uploadAudiogram,
     onSuccess: (data) => {
-      setResult(data)
+      if (data.confidence >= 0.8) {
+        notifications.show({
+          title: 'Upload Successful',
+          message: `Test uploaded with ${(data.confidence * 100).toFixed(0)}% confidence`,
+          color: 'green'
+        })
+        navigate(`/tests/${data.test_id}`)
+      } else {
+        navigate(`/tests/${data.test_id}/review`)
+      }
       queryClient.invalidateQueries({ queryKey: ['tests'] })
     }
   })
@@ -44,40 +55,6 @@ export function UploadForm() {
         <Alert color="red" title="Upload Failed">
           {uploadMutation.error.message}
         </Alert>
-      )}
-
-      {result && (
-        <>
-          <Alert
-            color={result.needs_review ? 'yellow' : 'green'}
-            title="Upload Successful"
-          >
-            Confidence: {(result.confidence * 100).toFixed(0)}%
-            {result.needs_review && ' - Manual review recommended'}
-          </Alert>
-
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Frequency (Hz)</Table.Th>
-                <Table.Th>Left Ear (dB)</Table.Th>
-                <Table.Th>Right Ear (dB)</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {result.left_ear.map((left, idx) => {
-                const right = result.right_ear[idx]
-                return (
-                  <Table.Tr key={left.frequency_hz}>
-                    <Table.Td>{left.frequency_hz}</Table.Td>
-                    <Table.Td>{left.threshold_db.toFixed(1)}</Table.Td>
-                    <Table.Td>{right?.threshold_db.toFixed(1) || '-'}</Table.Td>
-                  </Table.Tr>
-                )
-              })}
-            </Table.Tbody>
-          </Table>
-        </>
       )}
     </Stack>
   )

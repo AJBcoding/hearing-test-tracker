@@ -1,30 +1,29 @@
-import { Container, Title, Paper, Tabs, Stack } from '@mantine/core'
-import { UploadForm } from './components/UploadForm'
-import { AudiogramViewer } from './components/AudiogramViewer'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Notifications } from '@mantine/notifications'
+import '@mantine/notifications/styles.css'
+import { AppLayout } from './components/AppLayout'
+import { Dashboard } from './pages/Dashboard'
+import { TestList } from './pages/TestList'
+import { TestViewer } from './pages/TestViewer'
+import { TestReviewEdit } from './pages/TestReviewEdit'
+import { Upload } from './pages/Upload'
 
 export default function App() {
   return (
-    <Container size="xl" py="xl">
-      <Title order={1} mb="xl">Hearing Test Tracker</Title>
-
-      <Stack gap="xl">
-        <Paper shadow="sm" p="md" withBorder>
-          <Tabs defaultValue="upload">
-            <Tabs.List>
-              <Tabs.Tab value="upload">Upload</Tabs.Tab>
-              <Tabs.Tab value="visualize">Visualize</Tabs.Tab>
-            </Tabs.List>
-
-            <Tabs.Panel value="upload" pt="md">
-              <UploadForm />
-            </Tabs.Panel>
-
-            <Tabs.Panel value="visualize" pt="md">
-              <AudiogramViewer />
-            </Tabs.Panel>
-          </Tabs>
-        </Paper>
-      </Stack>
-    </Container>
+    <>
+      <Notifications />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="upload" element={<Upload />} />
+            <Route path="tests" element={<TestList />} />
+            <Route path="tests/:id" element={<TestViewer />} />
+            <Route path="tests/:id/review" element={<TestReviewEdit />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }
