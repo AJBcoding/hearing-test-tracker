@@ -4,15 +4,21 @@ import sys
 import time
 import webbrowser
 from pathlib import Path
+import os
 
 def main():
     base_dir = Path(__file__).parent
     venv_python = base_dir / 'venv' / 'bin' / 'python'
 
+    # Set up environment with PYTHONPATH for backend
+    backend_env = os.environ.copy()
+    backend_env['PYTHONPATH'] = str(base_dir)
+
     # Start backend
     backend_process = subprocess.Popen(
         [str(venv_python), 'backend/app.py'],
-        cwd=base_dir
+        cwd=base_dir,
+        env=backend_env
     )
 
     # Wait for backend to start
