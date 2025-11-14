@@ -1,14 +1,24 @@
-import { Container, Title, Paper } from '@mantine/core'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AppLayout } from './components/AppLayout'
+import { Dashboard } from './pages/Dashboard'
+import { TestList } from './pages/TestList'
+import { TestViewer } from './pages/TestViewer'
+import { TestReviewEdit } from './pages/TestReviewEdit'
 import { UploadForm } from './components/UploadForm'
 
 export default function App() {
   return (
-    <Container size="md" py="xl">
-      <Title order={1} mb="xl">Hearing Test Tracker</Title>
-
-      <Paper shadow="sm" p="md" withBorder>
-        <UploadForm />
-      </Paper>
-    </Container>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="upload" element={<UploadForm />} />
+          <Route path="tests" element={<TestList />} />
+          <Route path="tests/:id" element={<TestViewer />} />
+          <Route path="tests/:id/review" element={<TestReviewEdit />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
