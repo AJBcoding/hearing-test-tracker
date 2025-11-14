@@ -41,11 +41,102 @@ def upload_test():
     if file.filename == '':
         return jsonify({'error': 'Empty filename'}), 400
 
+    result = _process_single_file(file)
+
+    if 'error' in result:
+        return jsonify(result), 500
+
+    return jsonify(result)
+
+
+@api_bp.route('/tests/bulk-upload', methods=['POST'])
+def bulk_upload_tests():
+    """
+    Bulk upload and process multiple audiogram images.
+
+    Request:
+        Multipart form with multiple 'files[]' fields containing JPEG images
+
+    Response:
+        {
+            'total': int,
+            'successful': int,
+            'failed': int,
+            'results': [
+                {
+                    'filename': str,
+                    'status': 'success' | 'error',
+                    'test_id': str (if success),
+                    'confidence': float (if success),
+                    'needs_review': bool (if success),
+                    'error': str (if error)
+                },
+                ...
+            ]
+        }
+    """
+    if 'files[]' not in request.files:
+        return jsonify({'error': 'No files provided'}), 400
+
+    files = request.files.getlist('files[]')
+
+    if not files or len(files) == 0:
+        return jsonify({'error': 'No files provided'}), 400
+
+    results = []
+    successful = 0
+    failed = 0
+
+    for file in files:
+        if file.filename == '':
+            continue
+
+        result = _process_single_file(file)
+
+        if 'error' in result:
+            results.append({
+                'filename': file.filename,
+                'status': 'error',
+                'error': result['error']
+            })
+            failed += 1
+        else:
+            results.append({
+                'filename': file.filename,
+                'status': 'success',
+                'test_id': result['test_id'],
+                'confidence': result['confidence'],
+                'needs_review': result['needs_review']
+            })
+            successful += 1
+
+    return jsonify({
+        'total': len(results),
+        'successful': successful,
+        'failed': failed,
+        'results': results
+    })
+
+
+def _process_single_file(file):
+    """
+    Process a single audiogram file.
+
+    Args:
+        file: FileStorage object from request.files
+
+    Returns:
+        dict: Result with test_id, confidence, etc. or error message
+    """
     # Save uploaded file
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
     filename = f"{timestamp}_{file.filename}"
     filepath = AUDIOGRAMS_DIR / filename
-    file.save(filepath)
+
+    try:
+        file.save(filepath)
+    except Exception as e:
+        return {'error': f'Failed to save file: {str(e)}'}
 
     try:
         # Run OCR
@@ -54,18 +145,21 @@ def upload_test():
         # Save to database
         test_id = _save_test_to_database(ocr_result, filepath)
 
-        return jsonify({
+        return {
             'test_id': test_id,
             'confidence': ocr_result['confidence'],
             'needs_review': ocr_result['confidence'] < OCR_CONFIDENCE_THRESHOLD,
             'left_ear': ocr_result['left_ear'],
             'right_ear': ocr_result['right_ear']
-        })
+        }
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        # Clean up the file if processing failed
+        if filepath.exists():
+            filepath.unlink()
+        return {'error': str(e)}
 
 
 @api_bp.route('/tests', methods=['GET'])

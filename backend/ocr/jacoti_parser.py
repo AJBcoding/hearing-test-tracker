@@ -5,6 +5,7 @@ import cv2
 from backend.ocr.image_processor import preprocess_image, extract_graph_region
 from backend.ocr.marker_detector import detect_markers_by_color
 from backend.ocr.coordinate_transformer import calibrate_axes, pixels_to_audiogram_values
+from backend.ocr.text_extractor import extract_jacoti_metadata
 
 
 def parse_jacoti_audiogram(image_path: Path) -> Dict:
@@ -53,14 +54,22 @@ def parse_jacoti_audiogram(image_path: Path) -> Dict:
         expected_count=9
     )
 
-    # Extract metadata (simplified for now)
+    # Extract metadata using OCR text extraction
+    extracted_metadata = extract_jacoti_metadata(image_path)
+
+    # Build metadata dictionary
     metadata = {
-        'location': 'Jacoti Hearing Center',
-        'device': 'Jacoti'
+        'location': extracted_metadata.get('location') or 'Unknown',
+        'device': extracted_metadata.get('device') or 'Jacoti',
+        'time': extracted_metadata.get('time'),
+        'raw_footer_text': extracted_metadata.get('raw_footer_text', '')
     }
 
+    # Use extracted date or None if extraction failed
+    test_date = extracted_metadata.get('date')
+
     return {
-        'test_date': None,  # TODO: Add OCR text extraction for date
+        'test_date': test_date,
         'left_ear': left_ear_data,
         'right_ear': right_ear_data,
         'metadata': metadata,

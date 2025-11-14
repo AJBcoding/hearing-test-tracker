@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, FileInput, Stack, Alert } from '@mantine/core'
+import { Button, FileInput, Stack, Alert, Paper, Title } from '@mantine/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { notifications } from '@mantine/notifications'
@@ -34,28 +34,32 @@ export function UploadForm() {
   }
 
   return (
-    <Stack>
-      <FileInput
-        label="Upload Audiogram"
-        placeholder="Select JPEG image"
-        accept="image/jpeg,image/jpg"
-        value={file}
-        onChange={setFile}
-      />
+    <Paper p="md" withBorder>
+      <Stack>
+        <Title order={3}>Upload Single Audiogram</Title>
 
-      <Button
-        onClick={handleUpload}
-        disabled={!file || uploadMutation.isPending}
-        loading={uploadMutation.isPending}
-      >
-        Process Audiogram
-      </Button>
+        <FileInput
+          label="Select Audiogram Image"
+          placeholder="Click to select a JPEG file"
+          accept="image/jpeg,image/jpg,image/png"
+          value={file}
+          onChange={setFile}
+        />
 
-      {uploadMutation.isError && (
-        <Alert color="red" title="Upload Failed">
-          {uploadMutation.error.message}
-        </Alert>
-      )}
-    </Stack>
+        <Button
+          onClick={handleUpload}
+          disabled={!file || uploadMutation.isPending}
+          loading={uploadMutation.isPending}
+        >
+          Process Audiogram
+        </Button>
+
+        {uploadMutation.isError && (
+          <Alert color="red" title="Upload Failed">
+            {uploadMutation.error.message}
+          </Alert>
+        )}
+      </Stack>
+    </Paper>
   )
 }

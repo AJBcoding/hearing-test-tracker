@@ -18,6 +18,13 @@ A desktop application for visualizing and analyzing audiogram data from hearing 
 - Animated Timeline (morphing visualization)
 - Multi-Test Comparison Grid (side-by-side analysis)
 
+**Latest Updates:** 🎉 Enhanced OCR & Bulk Import
+- **OCR Metadata Extraction**: Automatically extract date, time, device, and location from Jacoti audiograms
+- **Bulk Upload**: Upload and process multiple audiograms at once from a folder
+- **Improved Text Recognition**: Tesseract OCR integration for footer text extraction
+- **Better Error Handling**: Individual file error handling in bulk uploads
+- **Enhanced UI**: Tabbed upload interface with detailed results tables
+
 **Next:** Phase 3 - Analysis & Reporting
 
 ## Quick Start
@@ -35,8 +42,12 @@ python run.py
 
 ## Documentation
 
+### Guides
+- [Quickstart Guide](docs/guides/quickstart.md) - Get started in 5 minutes
+- [API Documentation](docs/api/endpoints.md) - Complete REST API reference
+
+### Design & Planning
 - [Design Document](docs/plans/2025-11-14-hearing-test-visualization-tool-design.md)
-- [Quickstart Guide](docs/guides/quickstart.md)
 - [Implementation Plan](docs/plans/2025-11-14-phase1-core-infrastructure.md)
 
 ## Technology Stack
