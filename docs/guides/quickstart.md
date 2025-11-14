@@ -93,16 +93,47 @@ The dashboard is your home page showing:
 - **Latest Test**: Quick view of your most recent test
 - **Recent Tests Table**: Last 10 tests with confidence scores
 
-### Upload a New Test
+### Upload Tests
 
-1. Click **"Upload Test"** in the navigation bar
-2. Select a JPEG image of your audiogram
+Click **"Upload Test"** in the navigation bar to access two upload options:
+
+#### Option 1: Single Upload
+
+1. Click the **"Single Upload"** tab
+2. Select a JPEG/PNG image of your audiogram
 3. Click **"Process Audiogram"**
 4. Wait for OCR to complete (~5-10 seconds)
 
 **After Upload:**
 - **High confidence (≥80%)**: Automatically redirected to test viewer
 - **Low confidence (<80%)**: Redirected to review/edit page for manual correction
+
+#### Option 2: Bulk Upload (NEW! 🎉)
+
+Upload multiple audiograms at once from a folder:
+
+1. Click the **"Bulk Upload"** tab
+2. Click **"Select Multiple Audiogram Images"**
+3. Select multiple JPEG/PNG files (Ctrl/Cmd+Click to select multiple)
+4. Click **"Upload X Files"**
+5. Wait for processing to complete
+6. View the **Results Table** showing:
+   - ✅ Success/❌ Failure status for each file
+   - Confidence scores
+   - Review needed indicators
+   - Direct links to view each uploaded test
+
+**Features:**
+- Upload 10s or 100s of audiograms at once
+- Individual error handling (one failure doesn't stop others)
+- Clear progress indicators
+- Detailed results summary
+- Failed uploads are automatically cleaned up
+
+**Perfect for:**
+- Importing historical hearing test archives
+- Batch processing clinic records
+- Migrating from other systems
 
 ### View All Tests
 
@@ -164,3 +195,62 @@ python test_integration.py
 - Verify file is valid JPEG
 - Check file permissions
 - Try re-saving image in different program
+
+## Features
+
+### OCR Metadata Extraction (NEW! 🎉)
+
+The application now automatically extracts metadata from Jacoti audiogram images using Tesseract OCR:
+
+**Automatically Extracted:**
+- ✅ Test date (e.g., "2024-12-17")
+- ✅ Test time (e.g., "12:24")
+- ✅ Device name (e.g., "Jacoti Hearing Center")
+- ✅ Location (e.g., "Jacoti Hearing Center")
+- ✅ Hearing threshold measurements (left and right ear)
+
+**How it Works:**
+1. Upload an audiogram image (Jacoti format supported)
+2. Computer vision extracts graph markers (red circles for right ear, blue X for left ear)
+3. OCR extracts text metadata from the footer
+4. Date is parsed and stored automatically
+5. No manual entry needed!
+
+**Benefits:**
+- Eliminates manual data entry
+- Accurate date/time tracking
+- Consistent metadata across all tests
+- Historical context preserved
+
+### Bulk Upload
+
+See "Upload Tests" section above for details on bulk uploading multiple audiograms at once.
+
+### Visualization Options
+
+Multiple ways to view your hearing test data:
+
+**Audiogram Chart:**
+- Standard audiogram format with inverted Y-axis
+- Color-coded hearing loss zones (normal, mild, moderate, severe)
+- Left ear (blue) and right ear (red) plotted together
+
+**Frequency Trend Chart:**
+- Track specific frequencies over time
+- See hearing changes at key frequencies (250Hz, 500Hz, 1kHz, etc.)
+- Identify patterns and trends
+
+**Calendar Heatmap:**
+- Visual timeline of all tests
+- Color intensity shows frequency of testing
+- Quick identification of test gaps
+
+**Animated Timeline:**
+- Watch your hearing change over time
+- Smooth morphing between test dates
+- Interactive playback controls
+
+**Comparison Grid:**
+- Side-by-side comparison of multiple tests
+- Select specific tests to compare
+- Identify subtle differences
