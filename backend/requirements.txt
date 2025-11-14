@@ -4,5 +4,6 @@ python-dotenv==1.0.0
 opencv-python==4.8.1.78
 pytesseract==0.3.10
 Pillow>=10.2.0
+numpy<2.0  # Required for opencv-python compatibility
 pytest==7.4.3
 pytest-mock==3.12.0
