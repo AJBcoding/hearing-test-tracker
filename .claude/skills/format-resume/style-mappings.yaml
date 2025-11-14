@@ -1,0 +1,46 @@
+# Semantic inference rules for CV formatting
+version: 1.0
+
+patterns:
+  - name: cv_name
+    description: "Name at top of CV"
+    condition: "First line, ≤5 words, proper case"
+    style: "CV Name"
+
+  - name: section_header
+    description: "Section headers like EDUCATION"
+    condition: "ALL CAPS, short line, section divider"
+    style: "Section Header"
+
+  - name: timeline_entry
+    description: "Date range + institution"
+    condition: "Starts with date range pattern (YYYY - YYYY or YYYY - Present)"
+    style: "Timeline Entry"
+    inline_styles:
+      institution: "Institution"
+
+  - name: job_title
+    description: "Job position title"
+    condition: "Follows institution, italic context or bold italic text"
+    style: "Timeline Entry"
+    inline_style: "Job Title"
+
+  - name: play_production_title
+    description: "Play or production titles"
+    condition: "Italic text in production/work context, often in lists"
+    inline_style: "Play Title"
+
+  - name: bullet_standard
+    description: "Standard bullet points"
+    condition: "Starts with •, -, *, or list marker"
+    style: "Bullet Standard"
+
+  - name: bullet_gray
+    description: "Secondary bullets (dates, education details)"
+    condition: "Bullet in education section or date context"
+    style: "Bullet Gray"
+
+  - name: body_paragraph
+    description: "Standard body text"
+    condition: "Regular paragraph under job/role"
+    style: "Body Text"

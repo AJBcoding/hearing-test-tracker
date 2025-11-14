@@ -1,0 +1,28 @@
+---
+# Play Titles Dictionary
+# Auto-styled as italic in cover letters
+# Updated: 2025-11-11
+
+# Productions mentioned in your work
+productions:
+  - "Louis & Keely: Live at the Sahara"
+  - "Romeo & Juliet"
+  - "Hamlet"
+  - "The Tempest"
+  - "Macbeth"
+  - "King Lear"
+  - "A Midsummer Night's Dream"
+  - "Othello"
+
+# Programs and initiatives
+programs:
+  - "Experience LA!"
+
+# Learned from cover letters (auto-added by system)
+learned:
+  - text: "Louis & Keely: Live at the Sahara"
+    source: "colburn-cover-letter"
+    added_date: "2025-11-11"
+  - text: "Experience LA!"
+    source: "colburn-cover-letter"
+    added_date: "2025-11-11"

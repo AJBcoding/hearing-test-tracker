@@ -1,0 +1,208 @@
+# Style mappings for cover letter formatting
+# Defines patterns for structural and content elements
+
+structural_patterns:
+  date_line:
+    description: "Right-aligned date at document start"
+    pattern: "^(January|February|March|April|May|June|July|August|September|October|November|December) \\d{1,2}, \\d{4}$"
+    style: "Date Line"
+    examples:
+      - "November 25, 2024"
+      - "January 15, 2025"
+
+  salutation:
+    description: "Opening greeting"
+    pattern: "^Dear .+[,:]$"
+    style: "Body Text"
+    examples:
+      - "Dear Members of the Search Committee,"
+      - "Dear Dr. Smith,"
+      - "Dear Hiring Committee:"
+
+  section_header:
+    description: "Thematic essay headers (narrative, not domain)"
+    indicators:
+      - "Ends with question mark"
+      - "Starts with Why/How/What"
+      - "Title case standalone paragraph"
+      - "No trailing punctuation except ?"
+    style: "Section Header"
+    formatting:
+      document_type: "cover-letter"
+      color: "Black"
+      size: "13pt"
+      weight: "Bold"
+    examples:
+      - "Why UCLA? Why TFT? Why now?"
+      - "Enhancing Scholarship and Creative Practice"
+      - "Transformational Philanthropy"
+      - "Community and Professional Engagement"
+      - "Personal and Professional Infrastructure"
+
+  closing:
+    description: "Closing phrase before signature"
+    patterns:
+      - "^Thank you for .+"
+      - "^Sincerely,?$"
+      - "^Best regards,?$"
+      - "^Warm regards,?$"
+      - "^Respectfully,?$"
+    style: "Body Text"
+    examples:
+      - "Thank you for your time and consideration,"
+      - "Sincerely,"
+      - "Best regards,"
+
+  signature:
+    description: "Author name at end"
+    indicators:
+      - "Standalone short paragraph near end"
+      - "Typically follows closing"
+      - "Just a name, no additional text"
+    style: "Body Text"
+    examples:
+      - "Anthony Byrnes"
+      - "Dr. Jane Smith"
+
+content_patterns:
+  # These patterns are SHARED with format-resume skill
+  # Content mentions in cover letters use same styles as CV
+
+  play_title:
+    description: "Productions, venues, creative works"
+    indicators:
+      - "Theater/play titles"
+      - "Venue names"
+      - "Creative work titles"
+      - "Production names"
+    style: "Play Title"
+    formatting:
+      weight: "Bold"
+      style: "Italic"
+    examples:
+      - "Kirk Douglas Theatre"
+      - "Romeo & Juliet"
+      - "Angels in America"
+      - "Geffen Playhouse"
+      - "Ivy Substation"
+
+  institution:
+    description: "Universities, organizations, companies"
+    indicators:
+      - "University names"
+      - "College names"
+      - "Organization names"
+      - "Theater companies"
+      - "Cultural institutions"
+    style: "Institution"
+    formatting:
+      weight: "Bold"
+    examples:
+      - "UCLA"
+      - "University of California, Los Angeles"
+      - "Center Theatre Group"
+      - "California State University Long Beach"
+      - "CSULB"
+      - "USC"
+      - "Hammer Museum"
+      - "CAP UCLA"
+      - "Fowler Museum"
+
+  job_title:
+    description: "Positions held or mentioned"
+    indicators:
+      - "Leadership roles"
+      - "Academic positions"
+      - "Professional titles"
+    style: "Job Title"
+    formatting:
+      weight: "Bold"
+      style: "Italic"
+    examples:
+      - "Associate Dean"
+      - "Interim Associate Dean"
+      - "Artistic Director"
+      - "Executive Director"
+      - "Chair"
+      - "Dean"
+      - "Chancellor"
+      - "Associate Producer"
+
+  orange_emphasis:
+    description: "Key highlights, statistics, important achievements"
+    indicators:
+      - "Dollar amounts"
+      - "Percentages"
+      - "Large numbers"
+      - "Critical achievements"
+    style: "Orange Emphasis"
+    formatting:
+      weight: "Bold"
+      color: "#FF6D49"
+    examples:
+      - "$18 million"
+      - "100+ new plays"
+      - "4,600 students"
+      - "370% growth"
+
+  gray_text:
+    description: "Dates and secondary information"
+    indicators:
+      - "Parenthetical dates"
+      - "Year ranges"
+      - "Supplementary info in parentheses"
+    style: "Gray Text"
+    formatting:
+      color: "Gray"
+    examples:
+      - "(2010-2015)"
+      - "2024"
+      - "(PhD, 2010)"
+
+ambiguous_cases:
+  # Guide for resolving unclear situations
+
+  venue_vs_production:
+    question: "Is 'Kirk Douglas Theatre' a venue (Play Title) or institution?"
+    answer: "Play Title - it's a specific venue/production space"
+
+  company_vs_venue:
+    question: "Is 'Center Theatre Group' Institution or Play Title?"
+    answer: "Institution - it's an organization, not a venue/production"
+
+  abbreviated_institution:
+    question: "Is 'CSULB' recognized as institution?"
+    answer: "Yes - common abbreviation for California State University Long Beach"
+
+  section_header_vs_body:
+    question: "How to distinguish section header from emphasized body text?"
+    answer: "Section headers are standalone paragraphs, title case, thematic. Body text is narrative flow."
+
+  position_in_narrative:
+    question: "Is 'As Associate Dean' a Job Title or just body text?"
+    answer: "Job Title - even in narrative context, it's a formal position"
+
+document_type_signals:
+  # How to confirm this is a cover letter vs CV
+
+  cover_letter_indicators:
+    - "Starts with date and salutation"
+    - "Contains thematic section headers (Why X?)"
+    - "Narrative paragraphs, not bulleted lists"
+    - "Closes with 'Thank you' or similar"
+    - "Ends with signature only"
+    - "References positions/achievements narratively"
+
+  cv_indicators:
+    - "Starts with name header"
+    - "Contains domain section headers (EDUCATION, EXPERIENCE)"
+    - "Uses bulleted lists extensively"
+    - "Timeline entries with hanging indents"
+    - "Structured by category, not narrative flow"
+
+notes:
+  - "Cover letter section headers are BLACK 13pt, not orange 11pt like CV"
+  - "Date Line is unique to cover letters (CVs use inline dates with Gray Text)"
+  - "Content mentions (institutions, positions, productions) use SAME character styles as CV"
+  - "Cover letters are narrative; CVs are categorical"
+  - "Learning system stores corrections in learned-preferences.yaml"

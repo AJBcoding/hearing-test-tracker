@@ -1,0 +1,42 @@
+---
+# Cover Letter Defaults Configuration
+# Used for metadata inference when information is not provided
+# Last updated: 2025-11-11
+
+# Contact information (auto-populated if not provided)
+contact:
+  name: "ANTHONY BYRNES"
+  phone: "T: 213.305.3132"
+  email: "E: anthonybyrnes@mac.com"
+
+# Job description search paths
+job_descriptions:
+  primary_path: "/Users/anthonybyrnes/PycharmProjects/career-lexicon-builder/career-applications"
+  filename_pattern: "00-job-description.md"
+  search_subdirectories: true
+
+# Date preferences
+date:
+  auto_populate: true
+  format: "%B %d, %Y"  # November 11, 2025
+
+# Recipient preferences
+recipient:
+  default_salutation: "Dear Search Committee,"
+  require_address: true
+  
+# RE line preferences
+re_line:
+  auto_generate: true
+  require: false  # Optional, can be omitted if unclear
+
+# Document preferences
+document:
+  default_signature: "signature"  # Filename in signatures/ directory
+  include_page_headers: false
+  
+# Inference behavior
+inference:
+  confirm_before_formatting: true
+  show_all_at_once: true
+  allow_modifications: true

@@ -1,0 +1,25 @@
+# Learned CV Formatting Preferences
+# Three-layer learning system
+
+# Layer 1: Style corrections
+style_rules: []
+  # Example:
+  # - pattern: "committee|advisory|board"
+  #   context: "service section"
+  #   preferred_style: "Gray Text"
+  #   learned_date: "2025-11-11"
+  #   example: "Graduate Studies Advisory Committee"
+
+# Layer 2: Metadata patterns
+metadata_defaults: {}
+  # Example:
+  # document_title: "Curriculum Vitae"
+  # page_header_enabled: true
+  # date_format: "MMMM YYYY"
+
+# Layer 3: Section patterns
+section_patterns: {}
+  # Example:
+  # EDUCATION:
+  #   order: ["Timeline Entry", "Body Text", "Bullet Standard"]
+  #   inline_institution: true

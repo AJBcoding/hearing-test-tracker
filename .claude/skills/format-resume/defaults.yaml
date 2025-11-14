@@ -1,0 +1,16 @@
+# CV Formatting Defaults
+# Auto-loaded by format-resume skill
+
+contact:
+  name: "ANTHONY BYRNES"
+  phone: "213.305.3132"
+  email: "anthonybyrnes@mac.com"
+
+cv_defaults:
+  document_title: "Curriculum Vitae"
+  page_header:
+    enabled: true
+    format: "{name} - {title}"
+
+preferences:
+  version: "Academic"  # vs "Industry", "Arts"
