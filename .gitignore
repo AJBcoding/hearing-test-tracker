@@ -1,0 +1,9 @@
+.worktrees/
+__pycache__/
+*.pyc
+node_modules/
+.env
+*.db
+data/
+backups/
+exports/
