@@ -10,4 +10,3 @@ exports/
 venv/
 frontend/dist/
 .pytest_cache/
-Hearing test Archive/
