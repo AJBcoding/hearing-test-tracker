@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Button, Group, Stack, Text, Slider } from '@mantine/core'
 import { useState, useMemo, useEffect } from 'react'
-import { HearingTestDetail } from '../lib/api'
+import { HearingTestDetail, AudiogramMeasurement } from '../lib/api'
 
 interface AudiogramAnimationProps {
   tests: HearingTestDetail[]
@@ -28,8 +28,8 @@ export function AudiogramAnimation({ tests }: AudiogramAnimationProps) {
     if (!currentTest) return []
 
     return STANDARD_FREQUENCIES.map(freq => {
-      const leftMeasurement = currentTest.left_ear.find(m => m.frequency_hz === freq)
-      const rightMeasurement = currentTest.right_ear.find(m => m.frequency_hz === freq)
+      const leftMeasurement = currentTest.left_ear.find((m: AudiogramMeasurement) => m.frequency_hz === freq)
+      const rightMeasurement = currentTest.right_ear.find((m: AudiogramMeasurement) => m.frequency_hz === freq)
 
       return {
         frequency: freq,

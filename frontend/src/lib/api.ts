@@ -77,6 +77,9 @@ export interface TestDetail {
   }
 }
 
+// Alias for backward compatibility with visualization components
+export type HearingTestDetail = TestDetail
+
 export const getTest = async (testId: string): Promise<TestDetail> => {
   const response = await apiClient.get<TestDetail>(`/tests/${testId}`)
   return response.data

@@ -111,7 +111,6 @@ export function AudiogramViewer() {
               <AudiogramChart
                 leftEar={selectedTest.left_ear}
                 rightEar={selectedTest.right_ear}
-                testDate={selectedTest.test_date}
               />
             )}
           </Stack>
