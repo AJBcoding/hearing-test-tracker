@@ -6,7 +6,7 @@ import { Dashboard } from './pages/Dashboard'
 import { TestList } from './pages/TestList'
 import { TestViewer } from './pages/TestViewer'
 import { TestReviewEdit } from './pages/TestReviewEdit'
-import { UploadForm } from './components/UploadForm'
+import { Upload } from './pages/Upload'
 
 export default function App() {
   return (
@@ -17,7 +17,7 @@ export default function App() {
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="upload" element={<UploadForm />} />
+            <Route path="upload" element={<Upload />} />
             <Route path="tests" element={<TestList />} />
             <Route path="tests/:id" element={<TestViewer />} />
             <Route path="tests/:id/review" element={<TestReviewEdit />} />
