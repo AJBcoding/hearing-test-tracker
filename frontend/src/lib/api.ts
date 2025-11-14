@@ -29,6 +29,20 @@ export interface HearingTest {
   confidence: number
 }
 
+export interface HearingTestDetail {
+  id: string
+  test_date: string
+  source_type: string
+  location: string
+  left_ear: AudiogramMeasurement[]
+  right_ear: AudiogramMeasurement[]
+  metadata: {
+    device: string | null
+    technician: string | null
+    notes: string | null
+  }
+}
+
 export const uploadAudiogram = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData()
   formData.append('file', file)
@@ -42,5 +56,10 @@ export const uploadAudiogram = async (file: File): Promise<UploadResponse> => {
 
 export const listTests = async (): Promise<HearingTest[]> => {
   const response = await apiClient.get<HearingTest[]>('/tests')
+  return response.data
+}
+
+export const getTest = async (testId: string): Promise<HearingTestDetail> => {
+  const response = await apiClient.get<HearingTestDetail>(`/tests/${testId}`)
   return response.data
 }
