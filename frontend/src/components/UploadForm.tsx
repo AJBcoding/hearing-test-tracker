@@ -1,17 +1,23 @@
 import { useState } from 'react'
-import { Button, FileInput, Stack, Alert, Table } from '@mantine/core'
+import { Button, FileInput, Stack, Alert, Table, NumberInput, Group } from '@mantine/core'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { uploadAudiogram, type UploadResponse } from '../lib/api'
+import { uploadAudiogram, type UploadResponse, type AudiogramMeasurement } from '../lib/api'
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<UploadResponse | null>(null)
+  const [editedLeftEar, setEditedLeftEar] = useState<AudiogramMeasurement[]>([])
+  const [editedRightEar, setEditedRightEar] = useState<AudiogramMeasurement[]>([])
+  const [isEditing, setIsEditing] = useState(false)
   const queryClient = useQueryClient()
 
   const uploadMutation = useMutation({
     mutationFn: uploadAudiogram,
     onSuccess: (data) => {
       setResult(data)
+      setEditedLeftEar(data.left_ear)
+      setEditedRightEar(data.right_ear)
+      setIsEditing(data.needs_review)
       queryClient.invalidateQueries({ queryKey: ['tests'] })
     }
   })
@@ -20,6 +26,23 @@ export function UploadForm() {
     if (file) {
       uploadMutation.mutate(file)
     }
+  }
+
+  const handleConfirm = () => {
+    setIsEditing(false)
+    // TODO: Send updated values to backend if they were edited
+  }
+
+  const updateLeftEar = (index: number, value: number) => {
+    const updated = [...editedLeftEar]
+    updated[index] = { ...updated[index], threshold_db: value }
+    setEditedLeftEar(updated)
+  }
+
+  const updateRightEar = (index: number, value: number) => {
+    const updated = [...editedRightEar]
+    updated[index] = { ...updated[index], threshold_db: value }
+    setEditedRightEar(updated)
   }
 
   return (
@@ -49,11 +72,11 @@ export function UploadForm() {
       {result && (
         <>
           <Alert
-            color={result.needs_review ? 'yellow' : 'green'}
-            title="Upload Successful"
+            color={isEditing ? 'yellow' : 'green'}
+            title={isEditing ? 'Manual Review Required' : 'Upload Successful'}
           >
             Confidence: {(result.confidence * 100).toFixed(0)}%
-            {result.needs_review && ' - Manual review recommended'}
+            {isEditing && ' - Please review and correct values below'}
           </Alert>
 
           <Table>
@@ -65,18 +88,54 @@ export function UploadForm() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {result.left_ear.map((left, idx) => {
-                const right = result.right_ear[idx]
+              {editedLeftEar.map((left, idx) => {
+                const right = editedRightEar[idx]
                 return (
                   <Table.Tr key={left.frequency_hz}>
                     <Table.Td>{left.frequency_hz}</Table.Td>
-                    <Table.Td>{left.threshold_db.toFixed(1)}</Table.Td>
-                    <Table.Td>{right?.threshold_db.toFixed(1) || '-'}</Table.Td>
+                    <Table.Td>
+                      {isEditing ? (
+                        <NumberInput
+                          value={left.threshold_db}
+                          onChange={(val) => updateLeftEar(idx, val as number)}
+                          min={0}
+                          max={120}
+                          step={5}
+                          size="xs"
+                        />
+                      ) : (
+                        left.threshold_db.toFixed(1)
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {right ? (
+                        isEditing ? (
+                          <NumberInput
+                            value={right.threshold_db}
+                            onChange={(val) => updateRightEar(idx, val as number)}
+                            min={0}
+                            max={120}
+                            step={5}
+                            size="xs"
+                          />
+                        ) : (
+                          right.threshold_db.toFixed(1)
+                        )
+                      ) : '-'}
+                    </Table.Td>
                   </Table.Tr>
                 )
               })}
             </Table.Tbody>
           </Table>
+
+          {isEditing && (
+            <Group justify="flex-end">
+              <Button onClick={handleConfirm} color="green">
+                Confirm & Save Results
+              </Button>
+            </Group>
+          )}
         </>
       )}
     </Stack>

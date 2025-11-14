@@ -1,6 +1,7 @@
 """API routes for hearing test application."""
 from flask import Blueprint, request, jsonify, current_app
 from pathlib import Path
+from typing import Dict, List
 import shutil
 from datetime import datetime
 from backend.config import AUDIOGRAMS_DIR, OCR_CONFIDENCE_THRESHOLD
@@ -62,6 +63,8 @@ def upload_test():
         })
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
@@ -170,6 +173,36 @@ def get_test(test_id):
     })
 
 
+def _deduplicate_measurements(measurements: List[Dict]) -> List[Dict]:
+    """
+    Deduplicate measurements by frequency, keeping median threshold value.
+
+    Args:
+        measurements: List of measurements with frequency_hz and threshold_db
+
+    Returns:
+        Deduplicated list with one measurement per frequency
+    """
+    from collections import defaultdict
+    import statistics
+
+    # Group by frequency
+    freq_groups = defaultdict(list)
+    for m in measurements:
+        freq_groups[m['frequency_hz']].append(m['threshold_db'])
+
+    # Take median for each frequency
+    result = []
+    for freq, thresholds in freq_groups.items():
+        median_threshold = statistics.median(thresholds)
+        result.append({
+            'frequency_hz': freq,
+            'threshold_db': median_threshold
+        })
+
+    return sorted(result, key=lambda x: x['frequency_hz'])
+
+
 def _save_test_to_database(ocr_result: dict, image_path: Path) -> str:
     """Save OCR results to database."""
     conn = _get_db_connection()
@@ -192,10 +225,13 @@ def _save_test_to_database(ocr_result: dict, image_path: Path) -> str:
         ocr_result['confidence']
     ))
 
-    # Insert measurements
+    # Insert measurements (deduplicate by frequency first)
     for ear_name, ear_data in [('left', ocr_result['left_ear']),
                                 ('right', ocr_result['right_ear'])]:
-        for measurement in ear_data:
+        # Deduplicate: group by frequency and take median threshold
+        deduplicated = _deduplicate_measurements(ear_data)
+
+        for measurement in deduplicated:
             cursor.execute("""
                 INSERT INTO audiogram_measurement (
                     id, id_hearing_test, ear, frequency_hz, threshold_db
