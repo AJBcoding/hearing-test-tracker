@@ -40,6 +40,36 @@ export const uploadAudiogram = async (file: File): Promise<UploadResponse> => {
   return response.data
 }
 
+export interface BulkUploadResult {
+  filename: string
+  status: 'success' | 'error'
+  test_id?: string
+  confidence?: number
+  needs_review?: boolean
+  error?: string
+}
+
+export interface BulkUploadResponse {
+  total: number
+  successful: number
+  failed: number
+  results: BulkUploadResult[]
+}
+
+export const bulkUploadAudiograms = async (files: File[]): Promise<BulkUploadResponse> => {
+  const formData = new FormData()
+
+  files.forEach(file => {
+    formData.append('files[]', file)
+  })
+
+  const response = await apiClient.post<BulkUploadResponse>('/tests/bulk-upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+
+  return response.data
+}
+
 export const listTests = async (): Promise<HearingTest[]> => {
   const response = await apiClient.get<HearingTest[]>('/tests')
   return response.data
