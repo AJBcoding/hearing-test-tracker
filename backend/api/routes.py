@@ -173,6 +173,76 @@ def get_test(test_id):
     })
 
 
+@api_bp.route('/tests/<test_id>', methods=['PUT'])
+def update_test(test_id):
+    """
+    Update test data after manual review.
+
+    Request:
+        {
+            'test_date': str,
+            'location': str,
+            'device_name': str,
+            'notes': str,
+            'left_ear': [{'frequency_hz': int, 'threshold_db': float}, ...],
+            'right_ear': [{'frequency_hz': int, 'threshold_db': float}, ...]
+        }
+
+    Response:
+        Updated test object (same as GET /tests/:id)
+    """
+    data = request.json
+    conn = _get_db_connection()
+    cursor = conn.cursor()
+
+    # Verify test exists
+    cursor.execute("SELECT id FROM hearing_test WHERE id = ?", (test_id,))
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'error': 'Test not found'}), 404
+
+    # Update test metadata
+    cursor.execute("""
+        UPDATE hearing_test
+        SET test_date = ?,
+            location = ?,
+            device_name = ?,
+            notes = ?
+        WHERE id = ?
+    """, (
+        data['test_date'],
+        data.get('location'),
+        data.get('device_name'),
+        data.get('notes'),
+        test_id
+    ))
+
+    # Delete existing measurements
+    cursor.execute("DELETE FROM audiogram_measurement WHERE id_hearing_test = ?", (test_id,))
+
+    # Insert new measurements (deduplicated)
+    for ear_name, ear_data in [('left', data['left_ear']), ('right', data['right_ear'])]:
+        deduplicated = _deduplicate_measurements(ear_data)
+        for measurement in deduplicated:
+            cursor.execute("""
+                INSERT INTO audiogram_measurement (
+                    id, id_hearing_test, ear, frequency_hz, threshold_db
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                generate_uuid(),
+                test_id,
+                ear_name,
+                measurement['frequency_hz'],
+                measurement['threshold_db']
+            ))
+
+    conn.commit()
+    conn.close()
+
+    # Return updated test
+    return get_test(test_id)
+
+
 def _deduplicate_measurements(measurements: List[Dict]) -> List[Dict]:
     """
     Deduplicate measurements by frequency, keeping median threshold value.
