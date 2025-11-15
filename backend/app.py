@@ -1,6 +1,8 @@
 """Flask application factory."""
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pathlib import Path
 import logging
 
@@ -38,6 +40,16 @@ def create_app(db_path: Path = None):
         level=logging.DEBUG if app.config['DEBUG'] else logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+
+    # Configure rate limiting
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        storage_uri=app.config['RATELIMIT_STORAGE_URL'],
+        default_limits=[]
+    )
+    # Store limiter in app for routes to use
+    app.limiter = limiter
 
     # Register error handlers
     register_error_handlers(app)
@@ -93,6 +105,14 @@ def register_error_handlers(app):
             'error': f'File too large. Maximum size is {max_size_mb:.0f}MB',
             'status': 413
         }), 413
+
+    @app.errorhandler(429)
+    def ratelimit_handler(error):
+        """Handle 429 Too Many Requests."""
+        return jsonify({
+            'error': 'Rate limit exceeded. Too many requests.',
+            'status': 429
+        }), 429
 
     @app.errorhandler(500)
     def internal_server_error(error):

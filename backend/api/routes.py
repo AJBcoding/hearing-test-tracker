@@ -4,12 +4,61 @@ from pathlib import Path
 from typing import Dict, List
 import shutil
 from datetime import datetime
+from functools import wraps
 from backend.config import AUDIOGRAMS_DIR, OCR_CONFIDENCE_THRESHOLD
 from backend.database.db_utils import get_connection, generate_uuid
 from backend.ocr.jacoti_parser import parse_jacoti_audiogram
 from backend.auth.decorators import require_auth
+from backend.utils.file_validator import sanitize_filename, validate_upload_file
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+
+def rate_limit(limit_string):
+    """Apply rate limiting to a route using Flask-Limiter's storage."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            from flask_limiter.util import get_remote_address
+            limiter = current_app.limiter
+
+            # Build a unique key for this endpoint and client
+            key = f"rate_limit:{request.endpoint}:{get_remote_address()}"
+
+            try:
+                # Get the storage backend
+                storage = limiter._storage
+
+                # Parse the limit (e.g., "10 per minute")
+                parts = limit_string.split()
+                if len(parts) == 3 and parts[1] == "per":
+                    limit_count = int(parts[0])
+                    period_name = parts[2]
+
+                    # Convert period to seconds
+                    period_seconds = {
+                        "second": 1,
+                        "minute": 60,
+                        "hour": 3600,
+                        "day": 86400
+                    }.get(period_name, 60)
+
+                    # Get current count from storage
+                    current = storage.get(key) or 0
+
+                    if current >= limit_count:
+                        return jsonify({'error': 'Rate limit exceeded. Too many requests.'}), 429
+
+                    # Increment the counter
+                    storage.incr(key, expiry=period_seconds)
+
+            except Exception as e:
+                # If rate limiting fails, log and allow request (graceful degradation)
+                current_app.logger.warning(f"Rate limiting error: {e}")
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 
 def _get_db_connection():
@@ -18,8 +67,14 @@ def _get_db_connection():
     return get_connection(db_path)
 
 
+def _get_limiter():
+    """Get limiter from current app."""
+    return current_app.limiter
+
+
 @api_bp.route('/tests/upload', methods=['POST'])
 @require_auth
+@rate_limit("10 per minute")
 def upload_test():
     """
     Upload and process audiogram image.
@@ -46,7 +101,8 @@ def upload_test():
     result = _process_single_file(file)
 
     if 'error' in result:
-        return jsonify(result), 500
+        error_code = result.get('status_code', 500)
+        return jsonify({'error': result['error']}), error_code
 
     return jsonify(result)
 
@@ -131,15 +187,24 @@ def _process_single_file(file):
     Returns:
         dict: Result with test_id, confidence, etc. or error message
     """
-    # Save uploaded file
+    # Sanitize filename to prevent path traversal
+    safe_filename = sanitize_filename(file.filename)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-    filename = f"{timestamp}_{file.filename}"
+    filename = f"{timestamp}_{safe_filename}"
     filepath = AUDIOGRAMS_DIR / filename
 
     try:
         file.save(filepath)
     except Exception as e:
-        return {'error': f'Failed to save file: {str(e)}'}
+        return {'error': f'Failed to save file: {str(e)}', 'status_code': 500}
+
+    # Validate uploaded file
+    is_valid, error_message = validate_upload_file(filepath, file.filename)
+    if not is_valid:
+        # Clean up invalid file
+        if filepath.exists():
+            filepath.unlink()
+        return {'error': error_message, 'status_code': 400}
 
     try:
         # Run OCR
@@ -162,7 +227,7 @@ def _process_single_file(file):
         # Clean up the file if processing failed
         if filepath.exists():
             filepath.unlink()
-        return {'error': str(e)}
+        return {'error': str(e), 'status_code': 500}
 
 
 @api_bp.route('/tests', methods=['GET'])
