@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { captureStep, captureAfterElement } from './helpers/screenshot.js';
 import { selectors, waitTimes, routes, expectedValues } from './fixtures/test-data.js';
+import { setupEmptyStateMocks, setupWithTestsMocks } from './helpers/mock-api.js';
 
 test.describe('Complete User Journey', () => {
 
@@ -8,6 +9,11 @@ test.describe('Complete User Journey', () => {
   // PHASE 1: DASHBOARD (EMPTY STATE)
   // =================================================================
   test.describe('Phase 1: Dashboard (Empty State)', () => {
+
+    // Set up API mocking for empty state before each test
+    test.beforeEach(async ({ page }) => {
+      await setupEmptyStateMocks(page);
+    });
 
     test('01: Home page redirects to dashboard', async ({ page }) => {
       // Navigate to home page
@@ -67,11 +73,13 @@ test.describe('Complete User Journey', () => {
   // =================================================================
   test.describe('Phase 2: Upload Test', () => {
 
+    // Set up API mocking for empty state
+    test.beforeEach(async ({ page }) => {
+      await setupEmptyStateMocks(page);
+    });
+
     test('04: Navigate to upload page from dashboard', async ({ page }) => {
       await page.goto('/dashboard');
-
-      // Wait for dashboard to load
-      await page.waitForLoadState('networkidle');
 
       // Try to click "Upload Test" button if in empty state, otherwise use nav
       const uploadButton = page.locator(selectors.uploadTestButton);
@@ -125,6 +133,11 @@ test.describe('Complete User Journey', () => {
   // =================================================================
   test.describe('Phase 3: Dashboard with Tests', () => {
 
+    // Set up API mocking with test data
+    test.beforeEach(async ({ page }) => {
+      await setupWithTestsMocks(page);
+    });
+
     test('07: Navigate back to dashboard', async ({ page }) => {
       await page.goto('/upload');
 
@@ -141,9 +154,6 @@ test.describe('Complete User Journey', () => {
 
     test('08: Dashboard shows test statistics (if tests exist)', async ({ page }) => {
       await page.goto('/dashboard');
-
-      // Wait for loading to finish
-      await page.waitForLoadState('networkidle');
 
       // Check if there are tests
       const emptyState = page.locator(selectors.dashboardTitle);
@@ -173,6 +183,11 @@ test.describe('Complete User Journey', () => {
   // =================================================================
   test.describe('Phase 4: Test List', () => {
 
+    // Set up API mocking with test data
+    test.beforeEach(async ({ page }) => {
+      await setupWithTestsMocks(page);
+    });
+
     test('09: Navigate to all tests page', async ({ page }) => {
       await page.goto('/dashboard');
 
@@ -189,9 +204,6 @@ test.describe('Complete User Journey', () => {
 
     test('10: Test list page shows table or empty state', async ({ page }) => {
       await page.goto('/tests');
-
-      // Wait for page to load
-      await page.waitForLoadState('networkidle');
 
       // Check for tests table or empty state
       const hasTable = await page.locator(selectors.testListTable).isVisible().catch(() => false);
@@ -216,9 +228,13 @@ test.describe('Complete User Journey', () => {
   // =================================================================
   test.describe('Phase 5: Test Viewer', () => {
 
+    // Set up API mocking with test data
+    test.beforeEach(async ({ page }) => {
+      await setupWithTestsMocks(page);
+    });
+
     test('11: View test details (if tests exist)', async ({ page }) => {
       await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
 
       // Check if there are tests
       const viewDetailsButton = page.locator(selectors.viewDetailsButton).first();
@@ -231,9 +247,6 @@ test.describe('Complete User Journey', () => {
         // Wait for navigation to test viewer
         await page.waitForURL('**/tests/**');
         await expect(page).toHaveURL(/\/tests\/\d+$/);
-
-        // Wait for test details to load
-        await page.waitForLoadState('networkidle');
 
         // Capture screenshot
         await captureStep(page, 11, 'test-viewer-details');

@@ -16,15 +16,43 @@ This directory contains end-to-end (E2E) tests for the Hearing Test Tracker appl
 ✅ Package.json scripts for running tests
 ✅ Sequential test execution configured
 ✅ Auto-start dev server integration
+✅ **API mocking infrastructure** - Tests can run without backend dependency
+
+### API Mocking
+
+The test suite includes comprehensive API mocking capabilities using Playwright's route interception:
+
+**Mock API Helpers** (`helpers/mock-api.js`):
+- `setupEmptyStateMocks(page)` - Mock empty state (no tests)
+- `setupWithTestsMocks(page)` - Mock state with sample test data
+- `setupApiMocks(page, options)` - Flexible mocking with custom options
+
+**Mock Data Fixtures** (`fixtures/mock-api-data.js`):
+- Sample test data (5 hearing tests)
+- Upload success/failure responses
+- Individual test details with frequency data
+
+**Endpoints Mocked:**
+- `GET /api/tests` - Returns empty array or sample tests
+- `GET /api/tests/:id` - Returns test details
+- `POST /api/upload` - Returns upload success/failure
+
+Tests automatically use mocked APIs through `beforeEach` hooks in each test phase.
 
 ### Current Limitations
 
-⚠️ **Backend API Required**: The tests currently fail because the backend API server (port 5001) is not running. The frontend makes API calls to `/api/tests` which are proxied to `localhost:5001`, but this service is not available.
+⚠️ **Tests Still Require Debugging**: While API mocking infrastructure is complete, tests currently fail due to a page loading issue. The page URL remains empty after navigation, suggesting the frontend application may not be initializing properly even with mocked APIs.
 
-**To run these tests successfully, you need:**
-1. Start the backend API server on port 5001
-2. Ensure the API endpoints are functional (`GET /api/tests`, etc.)
-3. Have a database configured and accessible
+**Possible causes:**
+1. Frontend app may crash on initial load before route mocking takes effect
+2. React Query or other data fetching may trigger before routes are intercepted
+3. Dev server startup timing issues
+
+**To investigate:**
+- Run tests in headed mode: `npm run test:e2e:headed`
+- Check browser console for JavaScript errors
+- Verify dev server starts successfully
+- Review Playwright traces: `npx playwright show-trace test-results/.../trace.zip`
 
 ## Test Structure
 
@@ -56,9 +84,11 @@ The test suite is organized into 5 phases that cover the complete user journey:
 ```
 tests/e2e/
 ├── fixtures/
-│   └── test-data.js         # Centralized test data, selectors, and routes
+│   ├── test-data.js         # Centralized test data, selectors, and routes
+│   └── mock-api-data.js     # Mock API response data
 ├── helpers/
-│   └── screenshot.js        # Screenshot capture utilities
+│   ├── screenshot.js        # Screenshot capture utilities
+│   └── mock-api.js          # API mocking setup functions
 ├── user-flow.spec.js        # Main test suite
 └── README.md                # This file
 
