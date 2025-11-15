@@ -1,5 +1,5 @@
 """API routes for hearing test application."""
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, g
 from pathlib import Path
 from typing import Dict, List
 import shutil
@@ -7,6 +7,7 @@ from datetime import datetime
 from backend.config import AUDIOGRAMS_DIR, OCR_CONFIDENCE_THRESHOLD
 from backend.database.db_utils import get_connection, generate_uuid
 from backend.ocr.jacoti_parser import parse_jacoti_audiogram
+from backend.auth.decorators import require_auth
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -18,6 +19,7 @@ def _get_db_connection():
 
 
 @api_bp.route('/tests/upload', methods=['POST'])
+@require_auth
 def upload_test():
     """
     Upload and process audiogram image.
@@ -50,6 +52,7 @@ def upload_test():
 
 
 @api_bp.route('/tests/bulk-upload', methods=['POST'])
+@require_auth
 def bulk_upload_tests():
     """
     Bulk upload and process multiple audiogram images.
@@ -143,7 +146,7 @@ def _process_single_file(file):
         ocr_result = parse_jacoti_audiogram(filepath)
 
         # Save to database
-        test_id = _save_test_to_database(ocr_result, filepath)
+        test_id = _save_test_to_database(ocr_result, filepath, g.user_id)
 
         return {
             'test_id': test_id,
@@ -163,9 +166,10 @@ def _process_single_file(file):
 
 
 @api_bp.route('/tests', methods=['GET'])
+@require_auth
 def list_tests():
     """
-    List all hearing tests.
+    List all hearing tests for the authenticated user.
 
     Response:
         [
@@ -185,8 +189,9 @@ def list_tests():
     cursor.execute("""
         SELECT id, test_date, source_type, location, ocr_confidence
         FROM hearing_test
+        WHERE user_id = ?
         ORDER BY test_date DESC
-    """)
+    """, (g.user_id,))
 
     tests = []
     for row in cursor.fetchall():
@@ -203,9 +208,10 @@ def list_tests():
 
 
 @api_bp.route('/tests/<test_id>', methods=['GET'])
+@require_auth
 def get_test(test_id):
     """
-    Get specific test with all measurements.
+    Get specific test with all measurements for the authenticated user.
 
     Response:
         {
@@ -219,10 +225,10 @@ def get_test(test_id):
     conn = _get_db_connection()
     cursor = conn.cursor()
 
-    # Get test record
+    # Get test record (only if it belongs to the user)
     cursor.execute("""
-        SELECT * FROM hearing_test WHERE id = ?
-    """, (test_id,))
+        SELECT * FROM hearing_test WHERE id = ? AND user_id = ?
+    """, (test_id, g.user_id))
     test = cursor.fetchone()
 
     if not test:
@@ -268,9 +274,10 @@ def get_test(test_id):
 
 
 @api_bp.route('/tests/<test_id>', methods=['PUT'])
+@require_auth
 def update_test(test_id):
     """
-    Update test data after manual review.
+    Update test data after manual review (user can only update their own tests).
 
     Request:
         {
@@ -289,8 +296,8 @@ def update_test(test_id):
     conn = _get_db_connection()
     cursor = conn.cursor()
 
-    # Verify test exists
-    cursor.execute("SELECT id FROM hearing_test WHERE id = ?", (test_id,))
+    # Verify test exists and belongs to user
+    cursor.execute("SELECT id FROM hearing_test WHERE id = ? AND user_id = ?", (test_id, g.user_id))
     if not cursor.fetchone():
         conn.close()
         return jsonify({'error': 'Test not found'}), 404
@@ -302,13 +309,14 @@ def update_test(test_id):
             location = ?,
             device_name = ?,
             notes = ?
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
     """, (
         data['test_date'],
         data.get('location'),
         data.get('device_name'),
         data.get('notes'),
-        test_id
+        test_id,
+        g.user_id
     ))
 
     # Delete existing measurements
@@ -338,9 +346,10 @@ def update_test(test_id):
 
 
 @api_bp.route('/tests/<test_id>', methods=['DELETE'])
+@require_auth
 def delete_test(test_id):
     """
-    Delete a test and its measurements.
+    Delete a test and its measurements (user can only delete their own tests).
 
     Response:
         {'success': true}
@@ -348,8 +357,8 @@ def delete_test(test_id):
     conn = _get_db_connection()
     cursor = conn.cursor()
 
-    # Verify test exists
-    cursor.execute("SELECT id, image_path FROM hearing_test WHERE id = ?", (test_id,))
+    # Verify test exists and belongs to user
+    cursor.execute("SELECT id, image_path FROM hearing_test WHERE id = ? AND user_id = ?", (test_id, g.user_id))
     test = cursor.fetchone()
 
     if not test:
@@ -359,8 +368,8 @@ def delete_test(test_id):
     # Delete measurements (cascade should handle this, but explicit is clear)
     cursor.execute("DELETE FROM audiogram_measurement WHERE id_hearing_test = ?", (test_id,))
 
-    # Delete test
-    cursor.execute("DELETE FROM hearing_test WHERE id = ?", (test_id,))
+    # Delete test (double-check ownership)
+    cursor.execute("DELETE FROM hearing_test WHERE id = ? AND user_id = ?", (test_id, g.user_id))
 
     conn.commit()
     conn.close()
@@ -404,7 +413,7 @@ def _deduplicate_measurements(measurements: List[Dict]) -> List[Dict]:
     return sorted(result, key=lambda x: x['frequency_hz'])
 
 
-def _save_test_to_database(ocr_result: dict, image_path: Path) -> str:
+def _save_test_to_database(ocr_result: dict, image_path: Path, user_id: int) -> str:
     """Save OCR results to database."""
     conn = _get_db_connection()
     cursor = conn.cursor()
@@ -414,8 +423,8 @@ def _save_test_to_database(ocr_result: dict, image_path: Path) -> str:
     cursor.execute("""
         INSERT INTO hearing_test (
             id, test_date, source_type, location, device_name,
-            image_path, ocr_confidence
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            image_path, ocr_confidence, user_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         test_id,
         ocr_result['test_date'] or datetime.now().isoformat(),
@@ -423,7 +432,8 @@ def _save_test_to_database(ocr_result: dict, image_path: Path) -> str:
         ocr_result['metadata']['location'],
         ocr_result['metadata']['device'],
         str(image_path),
-        ocr_result['confidence']
+        ocr_result['confidence'],
+        user_id
     ))
 
     # Insert measurements (deduplicate by frequency first)
