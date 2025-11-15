@@ -50,6 +50,7 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'dev-secret-key-change-in-production')
     CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:3000']
 
 
@@ -62,6 +63,7 @@ class ProductionConfig(Config):
         super().__init__()
         # Re-read from environment to ensure values are current
         self.SECRET_KEY = os.getenv('SECRET_KEY')
+        self.JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', self.SECRET_KEY)
         cors_origins_str = os.getenv('CORS_ALLOWED_ORIGINS', '')
         self.CORS_ALLOWED_ORIGINS = cors_origins_str.split(',') if cors_origins_str else []
 

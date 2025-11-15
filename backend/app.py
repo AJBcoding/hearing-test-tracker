@@ -6,6 +6,7 @@ import logging
 
 from backend.config import get_config
 from backend.api.routes import api_bp
+from backend.api.auth_routes import auth_bp
 from backend.database.db_utils import init_database
 
 
@@ -46,6 +47,7 @@ def create_app(db_path: Path = None):
 
     # Register blueprints
     app.register_blueprint(api_bp)
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
     # Health check endpoint
     @app.route('/api/health')
