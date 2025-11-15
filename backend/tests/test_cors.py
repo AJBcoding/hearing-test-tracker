@@ -60,5 +60,6 @@ def test_production_requires_explicit_origins():
         create_app()
 
     # Cleanup
-    os.environ['FLASK_ENV'] = 'development'
+    os.environ.pop('FLASK_ENV', None)
     os.environ.pop('SECRET_KEY', None)
+    os.environ.pop('CORS_ALLOWED_ORIGINS', None)

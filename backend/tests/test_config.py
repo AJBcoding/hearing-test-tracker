@@ -39,5 +39,8 @@ def test_get_config_returns_correct_class():
     os.environ['CORS_ALLOWED_ORIGINS'] = 'http://example.com'
     config = get_config()
     assert isinstance(config, ProductionConfig)
-    os.environ.pop('SECRET_KEY')
-    os.environ.pop('CORS_ALLOWED_ORIGINS')
+
+    # Cleanup
+    os.environ.pop('FLASK_ENV', None)
+    os.environ.pop('SECRET_KEY', None)
+    os.environ.pop('CORS_ALLOWED_ORIGINS', None)
