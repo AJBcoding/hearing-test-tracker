@@ -7,7 +7,7 @@ export default defineConfig({
   expect: { timeout: 5000 },
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3001',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
     viewport: { width: 1280, height: 720 },
@@ -27,7 +27,7 @@ export default defineConfig({
   // Start dev server before tests
   webServer: {
     command: 'cd frontend && npm run dev',
-    port: 3000,
+    port: 3001,
     reuseExistingServer: true,
     timeout: 120000,
   },
