@@ -10,11 +10,14 @@ CREATE TABLE IF NOT EXISTS hearing_test (
     notes TEXT,
     image_path TEXT,
     ocr_confidence REAL,
+    user_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES user(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_test_date ON hearing_test(test_date DESC);
+CREATE INDEX IF NOT EXISTS idx_hearing_test_user_id ON hearing_test(user_id);
 
 -- Audiogram measurements
 CREATE TABLE IF NOT EXISTS audiogram_measurement (
@@ -47,3 +50,14 @@ AFTER UPDATE ON hearing_test
 BEGIN
     UPDATE hearing_test SET modified_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;
+
+-- User table for authentication
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on email for faster lookups
+CREATE INDEX IF NOT EXISTS idx_user_email ON user(email);
