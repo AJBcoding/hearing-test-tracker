@@ -10,3 +10,6 @@ exports/
 venv/
 frontend/dist/
 .pytest_cache/
+test-results/
+playwright-report/
+.DS_Store
