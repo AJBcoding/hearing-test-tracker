@@ -6,6 +6,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data"
 AUDIOGRAMS_DIR = DATA_DIR / "audiograms"
+DB_PATH = DATA_DIR / "hearing_tests.db"  # Backward compatibility
 
 # Create directories if they don't exist
 DATA_DIR.mkdir(exist_ok=True)
